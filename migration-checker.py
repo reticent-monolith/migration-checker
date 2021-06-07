@@ -40,7 +40,7 @@ def get_wref(line):
         return ""
 
 def read_log(file):
-    print(f"\nReading {file}")
+    print(f"\nReading {file}", end="\r")
     sites = SiteList()
     lines = list()
     w_ref = ""
@@ -141,7 +141,7 @@ if __name__ == "__main__":
             line = f"{site[0]},{site[1]}\n"
             # print(line)
             file.write(line)
-    print("Output written to migration_output.txt")
+    print("Output written to migration_output.txt" + " "*20)
 
 
     print(f"\n**********************\n\nCompleted in {round(time.time() - start_time)} seconds")
