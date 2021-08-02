@@ -1,1 +1,4 @@
-gateway.log
+*.log
+*.csv
+.vscode/
+__pycache__/
