@@ -1,7 +1,7 @@
 import sys
 import re
+from progressbar import progressbar as pbar
 from models import *
-from funcs import *
  
 def get_wref(line):
     match = re.search(
@@ -19,12 +19,11 @@ def get_lines(file) -> list:
     print(f"Importing {file}... ", end="", flush=True)
     lines = list()
     with open(file) as log:
-        for line in log:
-            lines.append(line)
+        lines = log.readlines()
     print("Done!")
     return lines
 
-def find_sites(lines, regex):
+def find_sites(lines):
     """
     get a list of all the lines in the log and all the siterefs on v2
     """
@@ -32,7 +31,7 @@ def find_sites(lines, regex):
     w_ref = ""
     for i, line in enumerate(lines):
         # If this line indicates that stjs v2 is being used
-        if regex in line:
+        if "STJSVERSION STJS::N/A::2." in line:
             # Get the siteref and w-ref from this line
             match_siteref = re.search(
                 "\s([a-z]+[0-9]+|test_[a-z]+[0-9]+)", line)
@@ -41,7 +40,6 @@ def find_sites(lines, regex):
                 w_ref = get_wref(line)
                 # add the Site to sites if new, or add the w_ref if already in list
                 if sites.does_not_contain(siteref):
-                    print(f"Found {siteref}\t\t\t\t\t", end="\r")
                     new_site = Site(siteref)
                     new_site.add_wref(w_ref)
                     new_site.first_index = i
@@ -49,7 +47,7 @@ def find_sites(lines, regex):
                 else:
                     site = sites.get_site(siteref)
                     site.add_wref(w_ref)
-    print(f"Found {sites.get_total()} sites!\t\t\t\t\t\t")
+    print(f"Processing {sites.get_total()} sites...\t\t\t\t\t\t")
     return sites
 
 
@@ -59,15 +57,14 @@ def process_sites(site_list: SiteList, lines):
     """
     sites = site_list.get()
     processed_sites = list()
-    for ref, site in sites:
-        site = process_site(ref, site, lines)
+    for _, site in pbar(sites, redirect_stdout=True):
+        site = process_site(site, lines)
         processed_sites.append(site)
     print(f"{len(sites)} sites processed!\t\t\t\t\t\t")
     return processed_sites
 
-def process_site(ref, site, lines):
+def process_site(site, lines):
     # Print the current process
-    print(f"Working on {ref} \t\t\t\t\t", end="\r")
     # Flag to end the loop searching for the site's iss
     found = False
     for wref in site.w_refs:
