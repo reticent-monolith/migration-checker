@@ -2,12 +2,57 @@
 """
 Arguments are files to process
 """
-import sys
-import time
+import sys, time ,re
 
-from models import *
-from funcs import *
+class Site():
+    def __init__(self, siteref):
+        self.siteref = siteref
+        self.iss = None
+        self.w_refs = set()
+    
+    def __repr__(self):
+        return f"{self.siteref} [{self.iss}] - {len(self.w_refs)} w-refs"
 
+    def add_wref(self, wref: str):
+        self.w_refs.add(wref)
+
+
+
+class SiteList():
+    def __init__(self):
+        self._sites: dict[str, Site] = dict()
+
+    def __iter__(self):
+        return iter(self._sites.values())
+
+    def get_site(self, siteref: str) -> Site:
+        return self._sites[siteref]
+
+    def add(self, site: Site):
+        self._sites[site.siteref] = site
+
+    def does_not_contain(self, siteref: str) -> bool:
+        return siteref not in self._sites.keys()
+
+    def get_refs(self) -> list:
+        return self._sites.keys()
+
+    def get_total(self) -> int:
+        return len(self._sites.keys())
+
+    def as_dict(self) -> dict:
+        return self._sites
+
+def get_wref(line):
+    match = re.search(
+        "(W\d{2}-[0-9a-zA-Z]{8})",
+        line
+    )
+    if match:
+        return match.group(1)
+    else:
+        # 1/0
+        return ""
 
 def main():
     start_time = time.time() # for timing
@@ -31,7 +76,7 @@ def main():
                         w_ref = get_wref(line)
                         if sites.does_not_contain(siteref):
                         #   search from this line onwards in lines that have the above wref (max 30 lines)
-                            for i in range(20):
+                            for i in range(30):
                                 search_line = log.readline()
                                 if w_ref in search_line:
                                     match_iss = re.search(
@@ -43,11 +88,11 @@ def main():
                                         iss = match_iss.group(1)
                                         if iss == "ppagejwt":
                                             break
+                                        print(f"Found {iss} for {siteref}\t\t\t\t\t", end="\r")
                                         new_site = Site(siteref)
                                         new_site.add_wref(w_ref)
                                         new_site.iss = iss
                                         sites.add(new_site)
-                                        print(f"Added {siteref}")
                                         break
                             log.seek(pos)
                         # elif line contains stjsversion and siteref IS in sites.get_refs():
@@ -63,7 +108,6 @@ def main():
         file.write("sitereference,transactions\n")
         for site in sites:
             file.write(f"{site.siteref},{len(site.w_refs)}\n")
-    print("*"*40)
     print("Output written to migration_output.csv" + " "*20)
     print(f"Completed in {round(time.time()-start_time)} seconds") # for timing
 
