@@ -11,7 +11,7 @@ class Site():
         self.w_refs = set()
     
     def __repr__(self):
-        return f"{self.siteref} [{self.iss}] - {len(self.w_refs)} w-refs"
+        return f"{self.siteref},{self.iss},{len(self.w_refs)}\n" # to write itself into a csv at the end
 
     def add_wref(self, wref: str):
         self.w_refs.add(wref)
@@ -111,7 +111,7 @@ def main():
     with open("./migration_output.csv", "w") as file:
         file.write("sitereference,username,transactions\n")
         for site in sites:
-            file.write(f"{site.siteref},{site.iss},{len(site.w_refs)}\n")
+            file.write(str(site))
     print("Output written to migration_output.csv" + " "*20)
     print(f"Completed in {round(time.time()-start_time)} seconds") # for timing
 
