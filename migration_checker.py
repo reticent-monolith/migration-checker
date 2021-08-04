@@ -15,6 +15,11 @@ class Site():
 
     def add_wref(self, wref: str):
         self.w_refs.add(wref)
+        return self
+
+    def set_iss(self, iss):
+        self.iss = iss
+        return self
 
 
 
@@ -65,7 +70,6 @@ def main():
                 line = log.readline()
                 if line == "": 
                     break
-                pos = log.tell()
             # if line contains STJSVERSION... 
                 if "STJSVERSION STJS::N/A::2." in line:
                     # ..and the siteref isn't in sites.get_refs()..
@@ -75,6 +79,7 @@ def main():
                         siteref = match_siteref.group(1)
                         w_ref = get_wref(line)
                         if sites.does_not_contain(siteref):
+                            pos = log.tell()
                         #   search from this line onwards in lines that have the above wref (max 30 lines)
                             for i in range(30):
                                 search_line = log.readline()
@@ -88,10 +93,9 @@ def main():
                                         iss = match_iss.group(1)
                                         if iss == "ppagejwt":
                                             break
-                                        print(f"Found {iss} for {siteref}\t\t\t\t\t", end="\r")
+                                        # print(f"Found {iss} for {siteref}\t\t\t\t\t", end="\r")
                                         new_site = Site(siteref)
-                                        new_site.add_wref(w_ref)
-                                        new_site.iss = iss
+                                        new_site.add_wref(w_ref).set_iss(iss)
                                         sites.add(new_site)
                                         break
                             log.seek(pos)
@@ -105,9 +109,9 @@ def main():
     
     # write the results to file
     with open("./migration_output.csv", "w") as file:
-        file.write("sitereference,transactions\n")
+        file.write("sitereference,username,transactions\n")
         for site in sites:
-            file.write(f"{site.siteref},{len(site.w_refs)}\n")
+            file.write(f"{site.siteref},{site.iss},{len(site.w_refs)}\n")
     print("Output written to migration_output.csv" + " "*20)
     print(f"Completed in {round(time.time()-start_time)} seconds") # for timing
 
