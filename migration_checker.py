@@ -100,13 +100,10 @@ def main():
                                         break
                             log.seek(pos)
                         # elif line contains stjsversion and siteref IS in sites.get_refs():
-            #   add wref to Site    
+                        #   add wref to Site    
                         else:
                             site = sites.get_site(siteref)
                             site.add_wref(w_ref)
-    # select all non ppages sites and count how many transactions they processed
-    results = {}
-    
     # write the results to file
     with open("./migration_output.csv", "w") as file:
         file.write("sitereference,username,transactions\n")
