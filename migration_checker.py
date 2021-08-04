@@ -58,8 +58,8 @@ class SiteList():
             if self.does_not_contain(new_site.siteref):
                 self.add(new_site)
             else:
-                new_site = self.get_site(new_site.siteref)
-                self.add(new_site)
+                site = self.get_site(new_site.siteref)
+                site.w_refs = site.w_refs | new_site.w_refs
 
 def get_wref(line):
     match = re.search(
@@ -78,7 +78,9 @@ def main():
     pool = Pool(processes=6)
     sites = pool.map(process_file, sys.argv[1:])
     results = SiteList()
+    print("Merging SiteLists...")
     for s in sites:
+        print(s.get_total())
         results.merge(s)
     # write the results to file
     with open("./migration_output.csv", "w") as file:
